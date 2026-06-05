@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minneapolis Walks</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🚶</span>
+        <div>
+          <h1>Minneapolis Walks</h1>
+          <p class="logo-sub">Downtown Routes &amp; Hidden Gems</p>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="addRouteBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Route
+      </button>
+    </header>
+
+    <!-- ── Main ── -->
+    <div class="main">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>My Routes</h2>
+          <span class="route-count" id="routeCount">0 routes</span>
+        </div>
+        <div class="routes-list" id="routesList">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🗺️</div>
+            <p>No walks saved yet</p>
+            <p class="empty-sub">Add your first Minneapolis route to get started</p>
+            <button class="btn btn-primary empty-cta" id="emptyCta">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Your First Route
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Map -->
+      <div class="map-container">
+        <div id="map"></div>
+
+        <!-- Drawing mode banner -->
+        <div class="map-banner" id="mapBanner">
+          <span class="banner-pulse"></span>
+          <span>Click the map to add waypoints</span>
+          <span class="banner-sep">·</span>
+          <button class="banner-link" id="bannerUndo">Undo last</button>
+          <span class="banner-sep">·</span>
+          <kbd>Esc</kbd> to cancel
+          <span class="banner-count" id="bannerCount"></span>
+        </div>
+
+        <!-- Map controls -->
+        <div class="map-controls">
+          <button class="map-btn" id="centerMapBtn" title="Center on Minneapolis">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C12.95 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Add Route Modal
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Route</h2>
+        <button class="icon-btn" id="modalClose">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Step 1: choose type -->
+      <div class="modal-step" id="stepType">
+        <p class="step-desc">How would you like to add a route?</p>
+        <div class="type-cards">
+          <button class="type-card" id="selectGenerate">
+            <span class="type-card-icon">🗺️</span>
+            <div class="type-card-body">
+              <strong>Auto-Generate</strong>
+              <span>Enter two spots and we'll find the best walking path between them using free OpenStreetMap routing.</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="type-card" id="selectCustom">
+            <span class="type-card-icon">✏️</span>
+            <div class="type-card-body">
+              <strong>Draw Your Own</strong>
+              <span>Click directly on the map to place waypoints and create a completely custom path.</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Generate form -->
+      <div class="modal-step" id="stepGenerate" style="display:none">
+        <button class="back-btn" id="backToType">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+
+        <div class="form-group">
+          <label>Route Name <span class="optional">(optional — we'll pick one if blank)</span></label>
+          <input type="text" id="genName" placeholder="e.g. Stone Arch Sunset Walk" class="input" autocomplete="off">
+        </div>
+
+        <div class="route-endpoints">
+          <div class="form-group">
+            <label><span class="dot dot-green"></span> Starting Point</label>
+            <div class="input-with-search">
+              <input type="text" id="genStart" placeholder="Search for a location in Minneapolis…" class="input" autocomplete="off">
+              <div class="search-dropdown" id="startResults"></div>
+            </div>
+          </div>
+          <div class="endpoints-line"></div>
+          <div class="form-group">
+            <label><span class="dot dot-red"></span> Ending Point</label>
+            <div class="input-with-search">
+              <input type="text" id="genEnd" placeholder="Search for a location in Minneapolis…" class="input" autocomplete="off">
+              <div class="search-dropdown" id="endResults"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes <span class="optional">(optional)</span></label>
+          <textarea id="genNotes" placeholder="What makes this walk special? Best season? Hidden gems?" class="input textarea"></textarea>
+        </div>
+
+        <div class="preview-card" id="routePreview" style="display:none">
+          <span class="preview-label">Route Preview</span>
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <span>📏</span>
+              <div>
+                <strong id="previewDistance">-</strong>
+                <small>Distance</small>
+              </div>
+            </div>
+            <div class="preview-divider"></div>
+            <div class="preview-stat">
+              <span>⏱️</span>
+              <div>
+                <strong id="previewDuration">-</strong>
+                <small>Walk Time</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="genFindBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Find Route
+          </button>
+          <button class="btn btn-primary" id="genSaveBtn" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Route
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       Custom Route Floating Panel
+  ══════════════════════════════════════ -->
+  <div class="custom-panel" id="customPanel">
+    <div class="custom-panel-header">
+      <div>
+        <h3>Drawing Route</h3>
+        <p class="custom-panel-status" id="customPanelStatus">Click the map to add waypoints</p>
+      </div>
+      <button class="icon-btn" id="customPanelClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="custom-panel-body">
+      <div class="form-group">
+        <label>Route Name</label>
+        <input type="text" id="customName" placeholder="My Favorite Walk" class="input input-sm" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Notes <span class="optional">(optional)</span></label>
+        <textarea id="customNotes" placeholder="Describe this route…" class="input textarea input-sm" style="min-height:52px"></textarea>
+      </div>
+
+      <div class="waypoints-section">
+        <div class="waypoints-header">
+          <span>Waypoints</span>
+          <span class="waypoint-count" id="waypointCount">0 points</span>
+        </div>
+        <div class="waypoints-list" id="waypointsList">
+          <p class="waypoints-hint">No points added yet</p>
+        </div>
+      </div>
+
+      <div class="custom-stats" id="customStats" style="display:none">
+        <span>📏 <strong id="customDistance">-</strong></span>
+        <span>⏱️ ~<strong id="customDuration">-</strong> min walk</span>
+      </div>
+    </div>
+
+    <div class="custom-panel-footer">
+      <button class="btn btn-secondary btn-sm" id="customUndoBtn">Undo</button>
+      <button class="btn btn-secondary btn-sm" id="customClearBtn">Clear All</button>
+      <button class="btn btn-primary btn-sm" id="customSaveBtn">Save Route</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
