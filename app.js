@@ -23,14 +23,14 @@ const COLORS = [
 ];
 
 const TAGS = [
-  { id: 'morning',  label: '☀️ Morning' },
-  { id: 'evening',  label: '🌆 Evening' },
-  { id: 'scenic',   label: '🌳 Scenic' },
-  { id: 'historic', label: '🏛️ Historic' },
-  { id: 'riverside',label: '🌊 Riverside' },
-  { id: 'hidden',   label: '💎 Hidden Gem' },
-  { id: 'dog',      label: '🐕 Dog-Friendly' },
-  { id: 'short',    label: '🎯 Short Loop' }
+  { id: 'morning',   label: '☀️ Morning' },
+  { id: 'evening',   label: '🌆 Evening' },
+  { id: 'scenic',    label: '🌳 Scenic' },
+  { id: 'historic',  label: '🏛️ Historic' },
+  { id: 'riverside', label: '🌊 Riverside' },
+  { id: 'hidden',    label: '💎 Hidden Gem' },
+  { id: 'dog',       label: '🐕 Dog-Friendly' },
+  { id: 'short',     label: '🎯 Short Loop' }
 ];
 
 const TAG_LABELS = Object.fromEntries(TAGS.map(t => [t.id, t.label]));
@@ -70,42 +70,43 @@ const MAP_LAYERS = {
 };
 
 const POIS = [
-  { name:'Stone Arch Bridge',      coords:[44.9789,-93.2577], icon:'🌉', desc:'Historic 1883 railroad bridge spanning the Mississippi with stunning views.' },
-  { name:'St. Anthony Falls',      coords:[44.9797,-93.2558], icon:'💧', desc:'The only natural waterfall on the entire Mississippi River.' },
-  { name:'Mill Ruins Park',        coords:[44.9791,-93.2582], icon:'🏭', desc:'Atmospheric ruins of 19th-century flour mills along the river.' },
-  { name:'Guthrie Theater',        coords:[44.9803,-93.2600], icon:'🎭', desc:'World-class theater with a dramatic cantilevered "Endless Bridge" overlook.' },
-  { name:'Gold Medal Park',        coords:[44.9807,-93.2589], icon:'🌿', desc:'Spiral-hill park offering elevated views of the Minneapolis skyline.' },
-  { name:'Father Hennepin Bluffs', coords:[44.9817,-93.2539], icon:'🌳', desc:'Scenic bluff park perched above the Mississippi — great sunsets.' },
-  { name:'Boom Island Park',       coords:[44.9972,-93.2759], icon:'⛵', desc:'Beautiful riverfront park with views of downtown Minneapolis.' },
-  { name:'Nicollet Mall',          coords:[44.9761,-93.2720], icon:'🛍️', desc:'Pedestrian-friendly street at the heart of downtown Minneapolis.' },
-  { name:'Walker Art Center',      coords:[44.9690,-93.2891], icon:'🎨', desc:'World-class contemporary art museum with rotating outdoor installations.' },
+  { name:'Stone Arch Bridge',            coords:[44.9789,-93.2577], icon:'🌉', desc:'Historic 1883 railroad bridge spanning the Mississippi with stunning views.' },
+  { name:'St. Anthony Falls',            coords:[44.9797,-93.2558], icon:'💧', desc:'The only natural waterfall on the entire Mississippi River.' },
+  { name:'Mill Ruins Park',              coords:[44.9791,-93.2582], icon:'🏭', desc:'Atmospheric ruins of 19th-century flour mills along the river.' },
+  { name:'Guthrie Theater',              coords:[44.9803,-93.2600], icon:'🎭', desc:'World-class theater with a dramatic cantilevered "Endless Bridge" overlook.' },
+  { name:'Gold Medal Park',              coords:[44.9807,-93.2589], icon:'🌿', desc:'Spiral-hill park offering elevated views of the Minneapolis skyline.' },
+  { name:'Father Hennepin Bluffs',       coords:[44.9817,-93.2539], icon:'🌳', desc:'Scenic bluff park perched above the Mississippi — great sunsets.' },
+  { name:'Boom Island Park',             coords:[44.9972,-93.2759], icon:'⛵', desc:'Beautiful riverfront park with views of downtown Minneapolis.' },
+  { name:'Nicollet Mall',                coords:[44.9761,-93.2720], icon:'🛍️', desc:'Pedestrian-friendly street at the heart of downtown Minneapolis.' },
+  { name:'Walker Art Center',            coords:[44.9690,-93.2891], icon:'🎨', desc:'World-class contemporary art museum with rotating outdoor installations.' },
   { name:'Minneapolis Sculpture Garden', coords:[44.9689,-93.2902], icon:'🐟', desc:'Home of the iconic Spoonbridge and Cherry — stunning year-round.' },
-  { name:'Loring Park',            coords:[44.9704,-93.2834], icon:'🌻', desc:'Charming urban park with a pond, gardens, and walking paths.' },
-  { name:'Bde Maka Ska',           coords:[44.9427,-93.3100], icon:'🏖️', desc:'Beautiful urban lake with sandy beaches and a 3-mile walking path.' },
-  { name:'Lake Harriet',           coords:[44.9215,-93.3079], icon:'🎵', desc:'Beloved lake with a bandshell, rose garden, and trolley line.' },
-  { name:'Minnehaha Falls',        coords:[44.9154,-93.2112], icon:'🌊', desc:'Stunning 53-foot waterfall immortalized by Longfellow — free to visit.' },
-  { name:'Northeast Riverfront',   coords:[44.9871,-93.2617], icon:'🏙️', desc:'Vibrant arts district with galleries, breweries, and river access.' }
+  { name:'Loring Park',                  coords:[44.9704,-93.2834], icon:'🌻', desc:'Charming urban park with a pond, gardens, and walking paths.' },
+  { name:'Bde Maka Ska',                 coords:[44.9427,-93.3100], icon:'🏖️', desc:'Beautiful urban lake with sandy beaches and a 3-mile walking path.' },
+  { name:'Lake Harriet',                 coords:[44.9215,-93.3079], icon:'🎵', desc:'Beloved lake with a bandshell, rose garden, and trolley line.' },
+  { name:'Minnehaha Falls',              coords:[44.9154,-93.2112], icon:'🌊', desc:'Stunning 53-foot waterfall immortalized by Longfellow — free to visit.' },
+  { name:'Northeast Riverfront',         coords:[44.9871,-93.2617], icon:'🏙️', desc:'Vibrant arts district with galleries, breweries, and river access.' }
 ];
 
 // ── State ─────────────────────────────────────────────────────
 let map, currentTileLayer;
-let routes    = [];
+let routes      = [];
 let routeLayers = {};
 let selectedId  = null;
 let colorIdx    = 0;
 
-let genStart   = null;
-let genEnd     = null;
-let genRouteData = null;
+let genStart        = null;
+let genEnd          = null;
+let genRouteData    = null;
 let genPreviewLayer = null;
-let genMarkers = [];
-let genTags    = new Set();
+let genMarkers      = [];
+let genTags         = new Set();
+let currentGenStep  = 0;
 
-let drawMode     = false;
+let drawMode      = false;
 let drawWaypoints = [];
-let drawMarkers  = [];
-let drawPolyline = null;
-let customTags   = new Set();
+let drawMarkers   = [];
+let drawPolyline  = null;
+let customTags    = new Set();
 
 let poiMarkers   = [];
 let poisVisible  = false;
@@ -127,31 +128,141 @@ function init() {
   fetchWeather();
 }
 
+// ── Sheet helpers ─────────────────────────────────────────────
+function showSheet(sheetId, backdropId) {
+  get(sheetId).classList.add('open');
+  if (backdropId) get(backdropId).classList.add('open');
+}
+
+function hideSheet(sheetId, backdropId) {
+  get(sheetId).classList.remove('open');
+  if (backdropId) get(backdropId).classList.remove('open');
+}
+
+// ── Wizard (add route sheet) ──────────────────────────────────
+function openWizard() {
+  showWizType();
+  showSheet('wizardSheet', 'wizardBackdrop');
+}
+
+function closeWizard() {
+  hideSheet('wizardSheet', 'wizardBackdrop');
+  clearGenPreview();
+  resetGenForm();
+}
+
+function showWizType() {
+  get('wStep0').style.display    = '';
+  get('wGenerate').style.display = 'none';
+}
+
+function showWizGenerate() {
+  get('wStep0').style.display    = 'none';
+  get('wGenerate').style.display = '';
+  showGenStep(0);
+}
+
+function showGenStep(n) {
+  for (let i = 0; i < 4; i++) {
+    const el = get(`gStep${i}`);
+    if (el) el.style.display = i === n ? '' : 'none';
+  }
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === n);
+  });
+  currentGenStep = n;
+}
+
+// ── Draw save sheet ───────────────────────────────────────────
+function openDrawSaveSheet() {
+  if (drawWaypoints.length < 2) {
+    toast('Add at least 2 waypoints first', 'error');
+    return;
+  }
+  const n    = drawWaypoints.length;
+  const dist = calcDistance(drawWaypoints);
+  get('customPoints').textContent   = n;
+  get('customDistance').textContent = `${dist.mi} mi`;
+  get('customDuration').textContent = Math.round((parseFloat(dist.mi) / 3) * 60);
+  showSheet('drawSaveSheet', 'drawSaveBackdrop');
+}
+
+function closeDrawSaveSheet() {
+  hideSheet('drawSaveSheet', 'drawSaveBackdrop');
+}
+
 // ── UI bindings ───────────────────────────────────────────────
 function bindUI() {
-  get('addRouteBtn').addEventListener('click', openModal);
-  get('emptyCta').addEventListener('click', openModal);
+  // FABs
+  get('addFab').addEventListener('click', openWizard);
+  get('routesFab').addEventListener('click', () => showSheet('routesSheet', 'routesBackdrop'));
+
+  // Routes sheet
+  get('routesClose').addEventListener('click', () => hideSheet('routesSheet', 'routesBackdrop'));
+  get('routesBackdrop').addEventListener('click', () => hideSheet('routesSheet', 'routesBackdrop'));
+
+  // Wizard sheet
+  get('wizClose').addEventListener('click', closeWizard);
+  get('wGenClose').addEventListener('click', closeWizard);
+  get('wizardBackdrop').addEventListener('click', closeWizard);
+
+  // Step 0: type selection
+  get('selectGenerate').addEventListener('click', showWizGenerate);
+  get('selectCustom').addEventListener('click', () => {
+    closeWizard();
+    startDrawMode();
+  });
+
+  // Generate nav: back button goes to prev step or type selection
+  get('wGenBack').addEventListener('click', () => {
+    if (currentGenStep > 0) showGenStep(currentGenStep - 1);
+    else showWizType();
+  });
+
+  // G-Step 0: Name
+  get('gS0Skip').addEventListener('click', () => showGenStep(1));
+  get('gS0Next').addEventListener('click', () => showGenStep(1));
+
+  // G-Step 1: Start location
+  get('gS1Back').addEventListener('click', () => showGenStep(0));
+  get('gS1Next').addEventListener('click', () => showGenStep(2));
+
+  // G-Step 2: End location + find route
+  get('gS2Back').addEventListener('click', () => showGenStep(1));
+  get('gS2Find').addEventListener('click', findRoute);
+
+  // G-Step 3: Tags/notes/save
+  get('gS3Back').addEventListener('click', () => showGenStep(2));
+  get('genSaveBtn').addEventListener('click', saveGeneratedRoute);
+
+  // Geocoding — enable gS1Next only when a start is picked
+  setupGeocoding('genStart', 'startResults', c => {
+    genStart = c;
+    get('gS1Next').disabled = false;
+  });
+  setupGeocoding('genEnd', 'endResults', c => { genEnd = c; });
+
+  get('genStart').addEventListener('input', e => {
+    if (!e.target.value.trim()) { genStart = null; get('gS1Next').disabled = true; }
+  });
+
+  // Draw toolbar
+  get('bannerUndo').addEventListener('click', undoLastPoint);
+  get('drawClear').addEventListener('click', clearDraw);
+  get('drawDone').addEventListener('click', openDrawSaveSheet);
+  get('drawCancel').addEventListener('click', exitDrawMode);
+
+  // Draw save sheet
+  get('drawSaveClose').addEventListener('click', closeDrawSaveSheet);
+  get('drawSaveBack').addEventListener('click', closeDrawSaveSheet);
+  get('drawSaveBackdrop').addEventListener('click', closeDrawSaveSheet);
+  get('customSaveBtn').addEventListener('click', saveCustomRoute);
+
+  // Map controls
   get('centerMapBtn').addEventListener('click', () => map.flyTo(MPLS, MPLS_ZOOM, { duration: 1.2 }));
   get('locateBtn').addEventListener('click', locateMe);
 
-  get('modalClose').addEventListener('click', closeModal);
-  get('modalOverlay').addEventListener('click', e => { if (e.target === get('modalOverlay')) closeModal(); });
-  get('selectGenerate').addEventListener('click', () => showStep('generate'));
-  get('selectCustom').addEventListener('click', startDrawMode);
-  get('backToType').addEventListener('click', () => showStep('type'));
-
-  setupGeocoding('genStart', 'startResults', c => { genStart = c; });
-  setupGeocoding('genEnd',   'endResults',   c => { genEnd   = c; });
-  get('genFindBtn').addEventListener('click', findRoute);
-  get('genSaveBtn').addEventListener('click', saveGeneratedRoute);
-
-  get('customPanelClose').addEventListener('click', exitDrawMode);
-  get('customUndoBtn').addEventListener('click', undoLastPoint);
-  get('customClearBtn').addEventListener('click', clearDraw);
-  get('customSaveBtn').addEventListener('click', saveCustomRoute);
-  get('bannerUndo').addEventListener('click', undoLastPoint);
-
-  // Filter/search/sort
+  // Filter / search / sort
   get('searchInput').addEventListener('input', e => {
     filterState.query = e.target.value.trim().toLowerCase();
     renderSidebar();
@@ -191,17 +302,20 @@ function bindUI() {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      if (drawMode) exitDrawMode();
-      else closeModal();
+      if (drawMode) {
+        if (get('drawSaveSheet').classList.contains('open')) closeDrawSaveSheet();
+        else exitDrawMode();
+      } else {
+        closeWizard();
+        hideSheet('routesSheet', 'routesBackdrop');
+      }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'z' && drawMode) {
       e.preventDefault();
       undoLastPoint();
     }
     const tag = document.activeElement?.tagName;
-    if (e.key === 'n' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
-      openModal();
-    }
+    if (e.key === 'n' && tag !== 'INPUT' && tag !== 'TEXTAREA') openWizard();
   });
 }
 
@@ -214,8 +328,7 @@ async function fetchWeather() {
     const code = parseInt(cond.weatherCode);
     get('weatherIcon').textContent = WEATHER_ICONS[code] || '🌤️';
     get('weatherTemp').textContent = `${cond.temp_F}°F`;
-    get('weatherDesc').textContent = cond.weatherDesc[0].value;
-  } catch { /* silently fail — default display is fine */ }
+  } catch { /* silently fail — defaults shown */ }
 }
 
 // ── Map layers ────────────────────────────────────────────────
@@ -342,24 +455,6 @@ async function fetchLocations(query, dropdown, input, onSelect) {
   }
 }
 
-// ── Modal ─────────────────────────────────────────────────────
-function openModal() {
-  showStep('type');
-  get('modalOverlay').classList.add('active');
-}
-
-function closeModal() {
-  get('modalOverlay').classList.remove('active');
-  clearGenPreview();
-  resetGenForm();
-}
-
-function showStep(step) {
-  get('stepType').style.display    = step === 'type'     ? '' : 'none';
-  get('stepGenerate').style.display = step === 'generate' ? '' : 'none';
-  get('modalTitle').textContent    = step === 'generate' ? 'Auto-Generate Route' : 'Add New Route';
-}
-
 // ── Tag pickers ───────────────────────────────────────────────
 function buildTagPicker(containerId, tagSet) {
   const c = get(containerId);
@@ -379,9 +474,9 @@ function buildTagPicker(containerId, tagSet) {
 async function findRoute() {
   if (!genStart || !genEnd) { toast('Please select both a start and end location', 'error'); return; }
 
-  const btn = get('genFindBtn');
+  const btn = get('gS2Find');
   btn.textContent = 'Finding…';
-  btn.disabled = true;
+  btn.disabled    = true;
   clearGenPreview();
 
   try {
@@ -417,9 +512,9 @@ async function findRoute() {
 
     get('previewDistance').textContent = `${distMi} mi (${distKm} km)`;
     get('previewDuration').textContent = `~${mins} min`;
-    get('previewCals').textContent     = `~${cals}`;
-    get('routePreview').style.display  = '';
-    get('genSaveBtn').disabled = false;
+    get('previewCals').textContent     = cals;
+
+    showGenStep(3);
 
   } catch {
     toast('Routing service unavailable — try again later', 'error');
@@ -432,16 +527,16 @@ async function findRoute() {
 function clearGenPreview() {
   if (genPreviewLayer) { map.removeLayer(genPreviewLayer); genPreviewLayer = null; }
   genMarkers.forEach(m => map.removeLayer(m));
-  genMarkers = [];
+  genMarkers   = [];
   genRouteData = null;
-  get('routePreview').style.display = 'none';
-  get('genSaveBtn').disabled = true;
 }
 
 function resetGenForm() {
-  ['genName','genStart','genEnd','genNotes'].forEach(id => { if (get(id)) get(id).value = ''; });
-  ['startResults','endResults'].forEach(id => { get(id).innerHTML = ''; get(id).classList.remove('open'); });
-  genStart = null; genEnd = null;
+  ['genName', 'genStart', 'genEnd', 'genNotes'].forEach(id => { const el = get(id); if (el) el.value = ''; });
+  ['startResults', 'endResults'].forEach(id => { get(id).innerHTML = ''; get(id).classList.remove('open'); });
+  genStart = null;
+  genEnd   = null;
+  if (get('gS1Next')) get('gS1Next').disabled = true;
   genTags.clear();
   buildTagPicker('genTagPicker', genTags);
   clearGenPreview();
@@ -469,29 +564,33 @@ function saveGeneratedRoute() {
 
   colorIdx++;
   addRoute(route);
-  closeModal();
+  closeWizard();
   toast(`"${name}" saved!`, 'success');
   selectRoute(route.id);
 }
 
 // ── Draw mode ─────────────────────────────────────────────────
 function startDrawMode() {
-  closeModal();
   drawMode = true;
   map.getContainer().style.cursor = 'crosshair';
-  get('customPanel').classList.add('active');
-  get('mapBanner').classList.add('visible');
+  get('fabs').classList.add('hidden');
+  get('drawToolbar').classList.add('visible');
+  get('drawBanner').classList.add('visible');
   updateDrawUI();
 }
 
 function exitDrawMode() {
   drawMode = false;
   map.getContainer().style.cursor = '';
-  get('customPanel').classList.remove('active');
-  get('mapBanner').classList.remove('visible');
+  get('fabs').classList.remove('hidden');
+  get('drawToolbar').classList.remove('visible');
+  get('drawBanner').classList.remove('visible');
+  closeDrawSaveSheet();
   clearDraw();
-  get('customName').value  = '';
-  get('customNotes').value = '';
+  const nameEl  = get('customName');
+  const notesEl = get('customNotes');
+  if (nameEl)  nameEl.value  = '';
+  if (notesEl) notesEl.value = '';
   customTags.clear();
   buildTagPicker('customTagPicker', customTags);
 }
@@ -533,29 +632,14 @@ function clearDraw() {
 
 function updateDrawUI() {
   const n = drawWaypoints.length;
-  get('waypointCount').textContent = `${n} point${n !== 1 ? 's' : ''}`;
-  get('bannerCount').textContent   = n ? `${n} pt${n !== 1 ? 's' : ''}` : '';
-
-  if (!n) {
-    get('waypointsList').innerHTML = '<p class="waypoints-hint">No points added yet</p>';
-    get('customStats').style.display = 'none';
-    get('customPanelStatus').textContent = 'Click the map to add waypoints';
-    return;
-  }
-
-  get('waypointsList').innerHTML = drawWaypoints.map((wp, i) => `
-    <div class="waypoint-item">
-      <span class="wpt-num">${i + 1}</span>
-      <span>${wp.lat.toFixed(5)}, ${wp.lng.toFixed(5)}</span>
-    </div>`).join('');
-  get('customPanelStatus').textContent = n < 2 ? 'Add at least one more point' : 'Looking good — keep adding or save!';
+  get('drawPts').textContent    = `${n} pt${n !== 1 ? 's' : ''}`;
+  get('bannerCount').textContent = n ? `${n} pt${n !== 1 ? 's' : ''}` : '';
 
   if (n >= 2) {
     const dist = calcDistance(drawWaypoints);
-    get('customDistance').textContent = `${dist.mi} mi`;
-    get('customDuration').textContent  = Math.round((parseFloat(dist.mi) / 3) * 60);
-    get('customCals').textContent      = Math.round(parseFloat(dist.mi) * 80);
-    get('customStats').style.display   = 'flex';
+    get('drawMi').textContent = `${dist.mi} mi`;
+  } else {
+    get('drawMi').textContent = '';
   }
 }
 
@@ -594,10 +678,7 @@ function addRoute(route) {
 function drawRouteOnMap(route) {
   if (routeLayers[route.id]) map.removeLayer(routeLayers[route.id]);
 
-  const line = L.polyline(route.coords, {
-    color: route.color, weight: 4, opacity: 0.72, lineJoin: 'round'
-  });
-
+  const line   = L.polyline(route.coords, { color: route.color, weight: 4, opacity: 0.72, lineJoin: 'round' });
   const startM = L.circleMarker(route.coords[0],                       dotStyle('#10b981', 7));
   const endM   = L.circleMarker(route.coords[route.coords.length - 1], dotStyle('#ef4444', 7));
 
@@ -641,8 +722,6 @@ function selectRoute(id) {
   if (route) {
     const line = routeLayers[id]?.getLayers().find(l => l instanceof L.Polyline);
     if (line) map.fitBounds(line.getBounds(), { padding: [60, 60] });
-
-    // Scroll card into view
     const card = document.querySelector(`.route-card[data-id="${id}"]`);
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -681,14 +760,12 @@ function deleteRoute(id) {
 function getFiltered() {
   let res = [...routes];
 
-  // Type/tag filter
   const f = filterState.filter;
-  if (f === 'favorites') res = res.filter(r => r.favorite);
-  else if (f === 'generated') res = res.filter(r => r.type === 'generated');
-  else if (f === 'custom')    res = res.filter(r => r.type === 'custom');
-  else if (f !== 'all')       res = res.filter(r => r.tags?.includes(f));
+  if      (f === 'favorites')  res = res.filter(r => r.favorite);
+  else if (f === 'generated')  res = res.filter(r => r.type === 'generated');
+  else if (f === 'custom')     res = res.filter(r => r.type === 'custom');
+  else if (f !== 'all')        res = res.filter(r => r.tags?.includes(f));
 
-  // Search
   if (filterState.query) {
     const q = filterState.query;
     res = res.filter(r =>
@@ -698,23 +775,26 @@ function getFiltered() {
     );
   }
 
-  // Sort
   switch (filterState.sort) {
-    case 'newest':   res.sort((a, b) => b.id - a.id); break;
-    case 'oldest':   res.sort((a, b) => a.id - b.id); break;
-    case 'dist-asc': res.sort((a, b) => parseFloat(a.distance.mi) - parseFloat(b.distance.mi)); break;
-    case 'dist-desc':res.sort((a, b) => parseFloat(b.distance.mi) - parseFloat(a.distance.mi)); break;
-    case 'dur-asc':  res.sort((a, b) => a.duration - b.duration); break;
+    case 'newest':    res.sort((a, b) => b.id - a.id); break;
+    case 'oldest':    res.sort((a, b) => a.id - b.id); break;
+    case 'dist-asc':  res.sort((a, b) => parseFloat(a.distance.mi) - parseFloat(b.distance.mi)); break;
+    case 'dist-desc': res.sort((a, b) => parseFloat(b.distance.mi) - parseFloat(a.distance.mi)); break;
+    case 'dur-asc':   res.sort((a, b) => a.duration - b.duration); break;
   }
 
   return res;
 }
 
-// ── Sidebar rendering ─────────────────────────────────────────
+// ── Sidebar / routes list rendering ──────────────────────────
 function renderSidebar() {
   const list  = get('routesList');
   const empty = get('emptyState');
   updateStats();
+
+  // Update FAB label with count
+  const label = get('routesFabLabel');
+  if (label) label.textContent = routes.length > 0 ? `My Routes (${routes.length})` : 'My Routes';
 
   if (!routes.length) {
     list.innerHTML = '';
@@ -779,7 +859,6 @@ function renderSidebar() {
     </div>`;
   }).join('');
 
-  // Bind interactions
   list.querySelectorAll('.route-card').forEach(card => {
     card.addEventListener('click', e => {
       if (e.target.closest('.card-fav, .card-delete, .card-action')) return;
@@ -872,7 +951,6 @@ function saveRoutes() {
 function loadRoutes() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    // Migrate older saved routes that may lack new fields
     routes = raw.map(r => ({
       tags: [], favorite: false, createdAt: new Date().toISOString(),
       ...r,
@@ -899,9 +977,9 @@ function dotStyle(color, r = 8) {
 
 function getDifficulty(route) {
   const mi = parseFloat(route.distance.mi);
-  if (mi <= 1)  return { cls: 'easy',        label: '🟢 Easy' };
-  if (mi <= 3)  return { cls: 'moderate',    label: '🟡 Moderate' };
-  return           { cls: 'challenging', label: '🔴 Challenging' };
+  if (mi <= 1) return { cls: 'easy',        label: '🟢 Easy' };
+  if (mi <= 3) return { cls: 'moderate',    label: '🟡 Moderate' };
+  return             { cls: 'challenging', label: '🔴 Challenging' };
 }
 
 function formatDate(iso) {
@@ -926,7 +1004,7 @@ function escXml(s) { return escHtml(s); }
 function toast(msg, type = 'info') {
   document.querySelectorAll('.toast').forEach(t => t.remove());
   const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
+  el.className  = `toast toast-${type}`;
   el.textContent = msg;
   document.body.appendChild(el);
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
