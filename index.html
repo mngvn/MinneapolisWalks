@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A personal collection of favorite walking routes in Downtown Minneapolis — add, save, and explore walks around the city.">
+  <meta name="theme-color" content="#080c18">
+  <meta property="og:title" content="Minneapolis Walks">
+  <meta property="og:description" content="My favorite walking routes in Downtown Minneapolis.">
+  <meta property="og:type" content="website">
+  <title>Minneapolis Walks</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚶</text></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🚶</span>
+        <div>
+          <h1>Minneapolis Walks</h1>
+          <p class="logo-sub">Downtown Routes &amp; Hidden Gems</p>
+        </div>
+      </div>
+
+      <div class="weather-widget" id="weatherWidget" title="Current conditions in Minneapolis">
+        <span class="weather-icon" id="weatherIcon">🌤️</span>
+        <div class="weather-info">
+          <span class="weather-temp" id="weatherTemp">--°F</span>
+          <span class="weather-desc" id="weatherDesc">Minneapolis</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="addRouteBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Route
+      </button>
+    </header>
+
+    <!-- ── Main ───────────────────────────────────────────── -->
+    <div class="main">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+
+        <!-- Search -->
+        <div class="sidebar-search">
+          <div class="search-wrap">
+            <svg class="search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="searchInput" placeholder="Search routes…" class="search-input" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Filters + sort -->
+        <div class="sidebar-filters">
+          <div class="filter-scroll" id="filterPills">
+            <button class="filter-pill active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="favorites">⭐ Faves</button>
+            <button class="filter-pill" data-filter="generated">🗺️ Generated</button>
+            <button class="filter-pill" data-filter="custom">✏️ Custom</button>
+            <button class="filter-pill" data-filter="morning">☀️ Morning</button>
+            <button class="filter-pill" data-filter="evening">🌆 Evening</button>
+            <button class="filter-pill" data-filter="scenic">🌳 Scenic</button>
+            <button class="filter-pill" data-filter="historic">🏛️ Historic</button>
+            <button class="filter-pill" data-filter="riverside">🌊 Riverside</button>
+            <button class="filter-pill" data-filter="hidden">💎 Hidden Gem</button>
+            <button class="filter-pill" data-filter="dog">🐕 Dog-Friendly</button>
+            <button class="filter-pill" data-filter="short">🎯 Short Loop</button>
+          </div>
+          <select class="sort-select" id="sortSelect">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="dist-asc">Shortest</option>
+            <option value="dist-desc">Longest</option>
+            <option value="dur-asc">Quickest</option>
+          </select>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="stats-bar" id="statsBar">
+          <div class="stat-item">
+            <span class="stat-num" id="statRoutes">0</span>
+            <span class="stat-lbl">Routes</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-item">
+            <span class="stat-num" id="statMiles">0</span>
+            <span class="stat-lbl">Miles</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-item">
+            <span class="stat-num" id="statHours">0h</span>
+            <span class="stat-lbl">Walking</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-item">
+            <span class="stat-num" id="statCals">0</span>
+            <span class="stat-lbl">Cal</span>
+          </div>
+        </div>
+
+        <!-- Route list -->
+        <div class="routes-list" id="routesList">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🗺️</div>
+            <p>No walks saved yet</p>
+            <p class="empty-sub">Start building your personal Minneapolis walking collection</p>
+            <button class="btn btn-primary empty-cta" id="emptyCta">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Your First Route
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Map -->
+      <div class="map-container">
+        <div id="map"></div>
+
+        <!-- Drawing banner -->
+        <div class="map-banner" id="mapBanner">
+          <span class="banner-pulse"></span>
+          Click the map to add waypoints
+          <span class="banner-sep">·</span>
+          <button class="banner-link" id="bannerUndo">Undo</button>
+          <span class="banner-sep">·</span>
+          <kbd>Esc</kbd> to cancel
+          <span class="banner-count" id="bannerCount"></span>
+        </div>
+
+        <!-- Controls -->
+        <div class="map-controls">
+          <button class="map-btn" id="centerMapBtn" title="Center on Minneapolis">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C12.95 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
+          </button>
+
+          <button class="map-btn" id="locateBtn" title="Go to my location">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </button>
+
+          <div class="layer-switcher" id="layerSwitcher">
+            <button class="map-btn" id="layerBtn" title="Change map style">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            </button>
+            <div class="layer-menu" id="layerMenu">
+              <button class="layer-opt active" data-layer="dark">🌑 Dark</button>
+              <button class="layer-opt" data-layer="light">☀️ Light</button>
+              <button class="layer-opt" data-layer="outdoor">🏔️ Outdoors</button>
+              <button class="layer-opt" data-layer="satellite">🛰️ Satellite</button>
+            </div>
+          </div>
+
+          <button class="map-btn" id="poisBtn" title="Toggle Minneapolis landmarks">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Add Route Modal ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Route</h2>
+        <button class="icon-btn" id="modalClose">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Type selection -->
+      <div class="modal-step" id="stepType">
+        <p class="step-desc">How would you like to create your route?</p>
+        <div class="type-cards">
+          <button class="type-card" id="selectGenerate">
+            <span class="type-card-icon">🗺️</span>
+            <div class="type-card-body">
+              <strong>Auto-Generate</strong>
+              <span>Enter two locations and we'll find the best pedestrian path using free OpenStreetMap routing — no API key needed.</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="type-card" id="selectCustom">
+            <span class="type-card-icon">✏️</span>
+            <div class="type-card-body">
+              <strong>Draw Your Own</strong>
+              <span>Click directly on the map to trace the exact path you know and love, waypoint by waypoint.</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Generate form -->
+      <div class="modal-step" id="stepGenerate" style="display:none">
+        <button class="back-btn" id="backToType">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+
+        <div class="form-group">
+          <label>Route Name <span class="opt">(optional — we'll pick one if blank)</span></label>
+          <input type="text" id="genName" placeholder="e.g. Stone Arch Sunset Walk" class="input" autocomplete="off">
+        </div>
+
+        <div class="route-endpoints">
+          <div class="form-group">
+            <label><span class="dot dot-green"></span> Starting Point</label>
+            <div class="input-with-search">
+              <input type="text" id="genStart" placeholder="Search a Minneapolis location…" class="input" autocomplete="off">
+              <div class="search-dropdown" id="startResults"></div>
+            </div>
+          </div>
+          <div class="endpoints-line"></div>
+          <div class="form-group">
+            <label><span class="dot dot-red"></span> Ending Point</label>
+            <div class="input-with-search">
+              <input type="text" id="genEnd" placeholder="Search a Minneapolis location…" class="input" autocomplete="off">
+              <div class="search-dropdown" id="endResults"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes <span class="opt">(optional)</span></label>
+          <textarea id="genNotes" placeholder="What makes this walk special? Best season? Hidden gems along the way?" class="input textarea"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Tags <span class="opt">(pick any that apply)</span></label>
+          <div class="tag-picker" id="genTagPicker"></div>
+        </div>
+
+        <div class="preview-card" id="routePreview" style="display:none">
+          <span class="preview-label">Route Found ✓</span>
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <span>📏</span>
+              <div><strong id="previewDistance">-</strong><small>Distance</small></div>
+            </div>
+            <div class="preview-divider"></div>
+            <div class="preview-stat">
+              <span>⏱️</span>
+              <div><strong id="previewDuration">-</strong><small>Walk Time</small></div>
+            </div>
+            <div class="preview-divider"></div>
+            <div class="preview-stat">
+              <span>🔥</span>
+              <div><strong id="previewCals">-</strong><small>Est. Cal</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="genFindBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Find Route
+          </button>
+          <button class="btn btn-primary" id="genSaveBtn" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Route
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Custom Route Floating Panel ══════════════════════════ -->
+  <div class="custom-panel" id="customPanel">
+    <div class="custom-panel-header">
+      <div>
+        <h3>Drawing Route</h3>
+        <p class="custom-panel-status" id="customPanelStatus">Click the map to add waypoints</p>
+      </div>
+      <button class="icon-btn" id="customPanelClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="custom-panel-body">
+      <div class="form-group">
+        <label>Route Name</label>
+        <input type="text" id="customName" placeholder="My Favorite Walk" class="input input-sm" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Notes <span class="opt">(optional)</span></label>
+        <textarea id="customNotes" placeholder="Describe this route…" class="input textarea input-sm" style="min-height:50px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Tags</label>
+        <div class="tag-picker tag-picker-sm" id="customTagPicker"></div>
+      </div>
+      <div class="waypoints-section">
+        <div class="waypoints-header">
+          <span>Waypoints</span>
+          <span class="waypoint-count" id="waypointCount">0 points</span>
+        </div>
+        <div class="waypoints-list" id="waypointsList">
+          <p class="waypoints-hint">No points added yet</p>
+        </div>
+      </div>
+      <div class="custom-stats" id="customStats" style="display:none">
+        <span>📏 <strong id="customDistance">-</strong></span>
+        <span>⏱️ ~<strong id="customDuration">-</strong> min</span>
+        <span>🔥 <strong id="customCals">-</strong> cal</span>
+      </div>
+    </div>
+    <div class="custom-panel-footer">
+      <button class="btn btn-secondary btn-sm" id="customUndoBtn">Undo</button>
+      <button class="btn btn-secondary btn-sm" id="customClearBtn">Clear</button>
+      <button class="btn btn-primary btn-sm" id="customSaveBtn">Save Route</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
