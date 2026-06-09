@@ -89,6 +89,15 @@
     </div>
   </div>
 
+  <!-- ── Gen pick mode bar (tap-to-set start/end) ─────────────── -->
+  <div class="gen-pick-bar" id="genPickBar">
+    <div class="gen-pick-hint-row">
+      <span class="banner-pulse"></span>
+      <span id="genPickHint">Tap the map to set location</span>
+    </div>
+    <button class="btn btn-sm btn-ghost" id="genPickCancel">Cancel</button>
+  </div>
+
   <!-- ════════════════════════════════════════════════════════
        ROUTES SHEET
   ════════════════════════════════════════════════════════ -->
@@ -225,15 +234,16 @@
         <div class="step-meta">
           <span class="step-eyebrow">Step 2 of 4</span>
           <h3 class="step-title">Where does it start?</h3>
-          <p class="step-hint">Search for an address, landmark, or intersection in Minneapolis.</p>
+          <p class="step-hint">Tap the button below, then tap anywhere on the map to drop your start pin.</p>
         </div>
-        <div class="loc-row">
-          <div class="loc-dot loc-green"></div>
-          <div class="input-with-search" style="flex:1">
-            <input type="text" class="input" id="genStart" placeholder="e.g. Nicollet Mall" autocomplete="off">
-            <div class="search-dropdown" id="startResults"></div>
+        <button class="loc-pick-btn" id="pickStartBtn">
+          <span class="loc-pick-dot loc-green"></span>
+          <div class="loc-pick-body">
+            <span class="loc-pick-label">Start point</span>
+            <span class="loc-pick-sub" id="startHint">Tap to pin on map</span>
           </div>
-        </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <div class="step-foot">
           <button class="btn btn-ghost" id="gS1Back">← Back</button>
           <button class="btn btn-primary" id="gS1Next" disabled>Next →</button>
@@ -245,21 +255,22 @@
         <div class="step-meta">
           <span class="step-eyebrow">Step 3 of 4</span>
           <h3 class="step-title">Where does it end?</h3>
-          <p class="step-hint">Same as start makes a loop. Different spot for a one-way walk.</p>
+          <p class="step-hint">Tap the map to set a destination, or let us pick a random one!</p>
         </div>
-        <div class="loc-row">
-          <div class="loc-dot loc-red"></div>
-          <div class="input-with-search" style="flex:1">
-            <input type="text" class="input" id="genEnd" placeholder="e.g. Stone Arch Bridge" autocomplete="off">
-            <div class="search-dropdown" id="endResults"></div>
+        <button class="loc-pick-btn" id="pickEndBtn">
+          <span class="loc-pick-dot loc-red"></span>
+          <div class="loc-pick-body">
+            <span class="loc-pick-label">End point</span>
+            <span class="loc-pick-sub" id="endHint">Tap to pin on map</span>
           </div>
-        </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="random-end-btn" id="randomEndBtn">
+          🎲 Surprise me — random destination
+        </button>
         <div class="step-foot">
           <button class="btn btn-ghost" id="gS2Back">← Back</button>
-          <button class="btn btn-primary" id="gS2Find">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Find Route
-          </button>
+          <button class="btn btn-primary" id="gS2Find" disabled>Find Route</button>
         </div>
       </div>
 

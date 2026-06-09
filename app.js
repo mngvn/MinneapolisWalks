@@ -101,6 +101,9 @@ let genPreviewLayer = null;
 let genMarkers      = [];
 let genTags         = new Set();
 let currentGenStep  = 0;
+let genPickMode     = null; // 'start' | 'end' | null
+let genStartMarker  = null;
+let genEndMarker    = null;
 
 let drawMode      = false;
 let drawWaypoints = [];
@@ -139,6 +142,74 @@ function hideSheet(sheetId, backdropId) {
   if (backdropId) get(backdropId).classList.remove('open');
 }
 
+// ── Gen pick mode (tap map to set start/end) ──────────────────
+function startGenPick(which) {
+  genPickMode = which;
+  get('genPickHint').textContent = which === 'start'
+    ? 'Tap the map to set your start point'
+    : 'Tap the map to set your end point';
+  // Temporarily hide wizard so full map is visible
+  get('wizardSheet').classList.remove('open');
+  get('wizardBackdrop').classList.remove('open');
+  get('genPickBar').classList.add('visible');
+  map.getContainer().style.cursor = 'crosshair';
+}
+
+function endGenPick(latlng) {
+  const coords = [latlng.lat, latlng.lng];
+  const coordLabel = `${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+
+  if (genPickMode === 'start') {
+    genStart = coords;
+    if (genStartMarker) map.removeLayer(genStartMarker);
+    genStartMarker = L.circleMarker(latlng, dotStyle('#10b981', 8)).addTo(map).bindPopup('Start');
+    get('startHint').textContent = coordLabel;
+    get('pickStartBtn').classList.add('set');
+    get('gS1Next').disabled = false;
+  } else {
+    genEnd = coords;
+    if (genEndMarker) map.removeLayer(genEndMarker);
+    genEndMarker = L.circleMarker(latlng, dotStyle('#ef4444', 8)).addTo(map).bindPopup('End');
+    get('endHint').textContent = coordLabel;
+    get('pickEndBtn').classList.add('set');
+    get('gS2Find').disabled = false;
+  }
+
+  map.flyTo(latlng, 15, { duration: 0.6 });
+  cancelGenPick(); // re-show wizard
+}
+
+function cancelGenPick() {
+  if (!genPickMode) return;
+  genPickMode = null;
+  get('genPickBar').classList.remove('visible');
+  map.getContainer().style.cursor = '';
+  showSheet('wizardSheet', 'wizardBackdrop');
+}
+
+function setRandomEnd() {
+  const center = genStart || MPLS;
+  const [lat, lng] = center;
+  const dist  = 0.5 + Math.random() * 2;   // 0.5–2.5 km
+  const angle = Math.random() * 2 * Math.PI;
+  const dLat  = (dist / 111) * Math.cos(angle);
+  const dLng  = (dist / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(angle);
+  genEnd = [lat + dLat, lng + dLng];
+
+  if (genEndMarker) map.removeLayer(genEndMarker);
+  genEndMarker = L.circleMarker(genEnd, dotStyle('#ef4444', 8)).addTo(map).bindPopup('Random end');
+
+  get('endHint').textContent = '🎲 Random spot';
+  get('pickEndBtn').classList.add('set');
+  get('gS2Find').disabled = false;
+
+  if (genStart) {
+    map.fitBounds(L.latLngBounds([genStart, genEnd]), { padding: [80, 80] });
+  }
+
+  findRoute(); // auto-route for random destination
+}
+
 // ── Wizard (add route sheet) ──────────────────────────────────
 function openWizard() {
   showWizType();
@@ -146,6 +217,10 @@ function openWizard() {
 }
 
 function closeWizard() {
+  // Cancel any active pick without re-showing the wizard
+  genPickMode = null;
+  get('genPickBar').classList.remove('visible');
+  map.getContainer().style.cursor = '';
   hideSheet('wizardSheet', 'wizardBackdrop');
   clearGenPreview();
   resetGenForm();
@@ -235,16 +310,11 @@ function bindUI() {
   get('gS3Back').addEventListener('click', () => showGenStep(2));
   get('genSaveBtn').addEventListener('click', saveGeneratedRoute);
 
-  // Geocoding — enable gS1Next only when a start is picked
-  setupGeocoding('genStart', 'startResults', c => {
-    genStart = c;
-    get('gS1Next').disabled = false;
-  });
-  setupGeocoding('genEnd', 'endResults', c => { genEnd = c; });
-
-  get('genStart').addEventListener('input', e => {
-    if (!e.target.value.trim()) { genStart = null; get('gS1Next').disabled = true; }
-  });
+  // Tap-to-pick start/end
+  get('pickStartBtn').addEventListener('click', () => startGenPick('start'));
+  get('pickEndBtn').addEventListener('click',   () => startGenPick('end'));
+  get('randomEndBtn').addEventListener('click', setRandomEnd);
+  get('genPickCancel').addEventListener('click', cancelGenPick);
 
   // Draw toolbar
   get('bannerUndo').addEventListener('click', undoLastPoint);
@@ -296,12 +366,16 @@ function bindUI() {
   // POI toggle
   get('poisBtn').addEventListener('click', togglePOIs);
 
-  // Map click for drawing
-  map.on('click', e => { if (drawMode) addDrawPoint(e.latlng); });
+  // Map click — gen pick mode takes priority over draw mode
+  map.on('click', e => {
+    if (genPickMode) { endGenPick(e.latlng); return; }
+    if (drawMode) addDrawPoint(e.latlng);
+  });
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      if (genPickMode) { cancelGenPick(); return; }
       if (drawMode) {
         if (get('drawSaveSheet').classList.contains('open')) closeDrawSaveSheet();
         else exitDrawMode();
@@ -387,74 +461,6 @@ function locateMe() {
   });
 }
 
-// ── Geocoding ─────────────────────────────────────────────────
-function setupGeocoding(inputId, dropdownId, onSelect) {
-  const input    = get(inputId);
-  const dropdown = get(dropdownId);
-  let timer;
-
-  input.addEventListener('input', () => {
-    clearTimeout(timer);
-    const q = input.value.trim();
-    if (q.length < 3) { dropdown.classList.remove('open'); return; }
-    timer = setTimeout(() => fetchLocations(q, dropdown, input, onSelect), 380);
-  });
-
-  document.addEventListener('click', e => {
-    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('open');
-  });
-}
-
-async function fetchLocations(query, dropdown, input, onSelect) {
-  try {
-    const params = new URLSearchParams({
-      q: query.toLowerCase().includes('minneapolis') ? query : `${query}, Minneapolis MN`,
-      format: 'json',
-      limit: 5,
-      addressdetails: 1
-    });
-    const res  = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-      headers: { 'Accept-Language': 'en-US,en' }
-    });
-    const data = await res.json();
-
-    if (!data.length) {
-      dropdown.innerHTML = '<div class="search-item-empty">No results — try a different search</div>';
-      dropdown.classList.add('open');
-      return;
-    }
-
-    dropdown.innerHTML = data.map(item => {
-      const parts = item.display_name.split(',');
-      const name  = parts.slice(0, 2).join(',').trim();
-      const sub   = parts.slice(2, 4).join(',').trim();
-      return `<div class="search-item" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${escHtml(name)}">
-        <span class="search-item-icon">📍</span>
-        <div>
-          <div class="search-item-name">${escHtml(name)}</div>
-          ${sub ? `<div class="search-item-sub">${escHtml(sub)}</div>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-
-    dropdown.querySelectorAll('.search-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const lat = parseFloat(item.dataset.lat);
-        const lon = parseFloat(item.dataset.lon);
-        input.value = item.dataset.name;
-        onSelect([lat, lon]);
-        dropdown.classList.remove('open');
-        map.flyTo([lat, lon], 16, { duration: 1 });
-      });
-    });
-
-    dropdown.classList.add('open');
-  } catch {
-    dropdown.innerHTML = '<div class="search-item-empty">Search unavailable — check your connection</div>';
-    dropdown.classList.add('open');
-  }
-}
-
 // ── Tag pickers ───────────────────────────────────────────────
 function buildTagPicker(containerId, tagSet) {
   const c = get(containerId);
@@ -527,16 +533,28 @@ async function findRoute() {
 function clearGenPreview() {
   if (genPreviewLayer) { map.removeLayer(genPreviewLayer); genPreviewLayer = null; }
   genMarkers.forEach(m => map.removeLayer(m));
-  genMarkers   = [];
+  genMarkers = [];
+  if (genStartMarker) { map.removeLayer(genStartMarker); genStartMarker = null; }
+  if (genEndMarker)   { map.removeLayer(genEndMarker);   genEndMarker   = null; }
   genRouteData = null;
 }
 
 function resetGenForm() {
-  ['genName', 'genStart', 'genEnd', 'genNotes'].forEach(id => { const el = get(id); if (el) el.value = ''; });
-  ['startResults', 'endResults'].forEach(id => { get(id).innerHTML = ''; get(id).classList.remove('open'); });
+  const nameEl  = get('genName');
+  const notesEl = get('genNotes');
+  if (nameEl)  nameEl.value  = '';
+  if (notesEl) notesEl.value = '';
   genStart = null;
   genEnd   = null;
   if (get('gS1Next')) get('gS1Next').disabled = true;
+  if (get('gS2Find')) get('gS2Find').disabled = true;
+  // Reset pick buttons to unset state
+  const startBtn = get('pickStartBtn');
+  const endBtn   = get('pickEndBtn');
+  if (startBtn) startBtn.classList.remove('set');
+  if (endBtn)   endBtn.classList.remove('set');
+  if (get('startHint')) get('startHint').textContent = 'Tap to pin on map';
+  if (get('endHint'))   get('endHint').textContent   = 'Tap to pin on map';
   genTags.clear();
   buildTagPicker('genTagPicker', genTags);
   clearGenPreview();
