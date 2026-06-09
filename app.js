@@ -105,6 +105,7 @@ let genPickMode     = null; // 'start' | 'end' | null
 let genStartMarker  = null;
 let genEndMarker    = null;
 
+let saving        = false; // prevents duplicate saves while sheet animates closed
 let drawMode      = false;
 let drawWaypoints = [];
 let drawMarkers   = [];
@@ -561,7 +562,9 @@ function resetGenForm() {
 }
 
 function saveGeneratedRoute() {
-  if (!genRouteData) return;
+  if (!genRouteData || saving) return;
+  saving = true;
+  get('genSaveBtn').disabled = true;
 
   const name  = get('genName').value.trim() || pickName();
   const notes = get('genNotes').value.trim();
@@ -583,6 +586,7 @@ function saveGeneratedRoute() {
   colorIdx++;
   addRoute(route);
   closeWizard();
+  saving = false;
   toast(`"${name}" saved!`, 'success');
   selectRoute(route.id);
 }
@@ -663,6 +667,9 @@ function updateDrawUI() {
 
 function saveCustomRoute() {
   if (drawWaypoints.length < 2) { toast('Add at least 2 waypoints to save a route', 'error'); return; }
+  if (saving) return;
+  saving = true;
+  get('customSaveBtn').disabled = true;
 
   const name  = get('customName').value.trim() || pickName();
   const notes = get('customNotes').value.trim();
@@ -681,12 +688,17 @@ function saveCustomRoute() {
   colorIdx++;
   addRoute(route);
   exitDrawMode();
+  saving = false;
   toast(`"${name}" saved!`, 'success');
   selectRoute(route.id);
 }
 
 // ── Route management ──────────────────────────────────────────
 function addRoute(route) {
+  // Deduplicate: reject if an identical ID or same-name save within the last 2 seconds
+  if (routes.some(r => r.id === route.id)) return;
+  const recent = routes[routes.length - 1];
+  if (recent && recent.name === route.name && route.id - recent.id < 2000) return;
   routes.push(route);
   saveRoutes();
   renderSidebar();

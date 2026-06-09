@@ -1198,6 +1198,15 @@ body {
   color: var(--text-dim);
 }
 
+/* Disable all interaction the moment a sheet starts closing */
+.bottom-sheet:not(.open) {
+  pointer-events: none;
+}
+.draw-toolbar:not(.visible),
+.gen-pick-bar:not(.visible) {
+  pointer-events: none;
+}
+
 /* ── Desktop: float sheets centered ─────────────────────────── */
 @media (min-width: 640px) {
   .bottom-sheet {
